@@ -4,14 +4,17 @@ import WindiCSS from 'vite-plugin-windicss';
 import { defineConfig } from 'vite';
 import vue from '@vitejs/plugin-vue';
 
-// https://vitejs.dev/config/
 export default defineConfig({
-  base: fileURLToPath(new URL('./dist', import.meta.url)),
+  root: fileURLToPath(new URL('./src/renderer', import.meta.url)),
+  base: './',
   plugins: [WindiCSS(), vue()],
   resolve: {
     alias: {
-      '@': fileURLToPath(new URL('./src', import.meta.url)),
+      '@': fileURLToPath(new URL('./src/renderer/src', import.meta.url)),
     },
+  },
+  build: {
+    outDir: fileURLToPath(new URL('./dist/renderer', import.meta.url)),
   },
   css: {
     preprocessorOptions: {

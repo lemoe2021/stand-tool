@@ -6,4 +6,8 @@ export const useDirectoryStore = defineStore({
     origin: '',
     target: '',
   }),
+  persist: {
+    enabled: true,
+    strategies: [{ storage: localStorage }],
+  },
 });
