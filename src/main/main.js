@@ -1,19 +1,22 @@
 const { BrowserWindow, app, dialog, ipcMain } = require('electron');
+const walk = require('walkdir');
 
+const fs = require('fs');
 const path = require('path');
 
 let win;
 const createWindow = () => {
   win = new BrowserWindow({
-    width: 800,
-    height: 600,
+    show: false,
     webPreferences: {
       contextIsolation: false,
       preload: path.join(__dirname, 'preload.js'),
     },
   });
 
+  win.maximize();
   win.loadFile('./dist/renderer/index.html');
+  win.show();
   win.webContents.openDevTools();
 };
 
@@ -37,5 +40,52 @@ ipcMain.handle('select-directory', async () => {
   const result = await dialog.showOpenDialog(win, {
     properties: ['openDirectory'],
   });
-  return result.canceled ? null : result.filePaths[0];
+  return {
+    data: result.canceled ? null : result.filePaths[0],
+  };
+});
+
+ipcMain.handle('scan-directory', async (event, pathname) => {
+  if (!fs.existsSync(pathname)) {
+    return {
+      message: '路径不存在',
+    };
+  }
+
+  const data = { children: [] };
+  const map = { [pathname]: data };
+
+  const res = await walk.async(pathname, {
+    no_recurse: true,
+    return_object: true,
+  });
+  for (pathname in res) {
+    const stat = res[pathname];
+    if (stat.isDirectory() || stat.isFile()) {
+      const item = {
+        pathname,
+        filename: path.basename(pathname),
+        isFile: stat.isFile(),
+        inodeNo: stat.ino,
+        children: [],
+      };
+      map[path.dirname(pathname)].children.push(item);
+      if (stat.isDirectory()) {
+        map[pathname] = item;
+      }
+    }
+  }
+
+  const sort = (list) => {
+    list.sort((a, b) => a.filename - b.filename);
+    for (const item of list) {
+      item.children = sort(item.children);
+    }
+    return list;
+  };
+  data.children = sort(data.children);
+
+  return {
+    data: data.children,
+  };
 });

@@ -21,14 +21,14 @@ const handleSubmit = (data) => {
 
 const handleSelectDirectory = async (name) => {
   const res = await window.ipcRenderer.invoke('select-directory');
-  if (res) {
-    form[name] = res;
+  if (res.data) {
+    form[name] = res.data;
   }
 };
 </script>
 
 <template>
-  <a-form :model="form" direction="vertical" @submit="handleSubmit">
+  <a-form :model="form" layout="vertical" @submit="handleSubmit">
     <a-form-item
       field="origin"
       label="源路径"
