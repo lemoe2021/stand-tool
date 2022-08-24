@@ -1,5 +1,8 @@
 <script setup>
-import { computed, defineAsyncComponent, ref } from 'vue';
+import { computed, ref } from 'vue';
+
+import DirectoryForm from './forms/directory.vue';
+import WhitelistForm from './forms/whitelist.vue';
 
 const props = defineProps({
   visible: {
@@ -20,9 +23,16 @@ const newVisible = computed({
 
 const name = ref('directory');
 
-const component = computed(() =>
-  defineAsyncComponent(() => import(`./forms/${name.value}.vue`))
-);
+const component = computed(() => {
+  switch (name.value) {
+    case 'directory':
+      return DirectoryForm;
+    case 'whitelist':
+      return WhitelistForm;
+    default:
+      return DirectoryForm;
+  }
+});
 </script>
 
 <template>
@@ -44,6 +54,10 @@ const component = computed(() =>
           <a-menu-item key="directory">
             <template #icon><icon-folder size="20" /></template>
             路径
+          </a-menu-item>
+          <a-menu-item key="whitelist">
+            <template #icon><icon-robot size="20" /></template>
+            白名单
           </a-menu-item>
         </a-menu>
       </a-layout-sider>

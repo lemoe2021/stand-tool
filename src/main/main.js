@@ -77,7 +77,9 @@ ipcMain.handle('scan-directory', async (event, pathname) => {
   }
 
   const sort = (list) => {
-    list.sort((a, b) => a.filename - b.filename);
+    list.sort((a, b) =>
+      a.isFile === b.isFile ? a.filename - b.filename : a.isFile - b.isFile
+    );
     for (const item of list) {
       item.children = sort(item.children);
     }

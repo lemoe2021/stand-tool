@@ -6,9 +6,11 @@ import { onMounted, reactive, watch } from 'vue';
 
 import { useAppStore } from '@/stores/app';
 import { useDirectoryStore } from '@/stores/directory';
+import { useWhitelistStore } from '@/stores/whitelist';
 
 const appStore = useAppStore();
 const directoryStore = useDirectoryStore();
+const whitelistStore = useWhitelistStore();
 
 if (!directoryStore.origin || !directoryStore.target) {
   appStore.visible = true;
@@ -30,6 +32,14 @@ watch(
   () => directoryStore.target,
   () => {
     initTarget();
+  }
+);
+
+let extensions = whitelistStore.extensions.split('\n');
+watch(
+  () => whitelistStore.extensions,
+  () => {
+    extensions = whitelistStore.extensions.split('\n');
   }
 );
 
@@ -135,6 +145,12 @@ const handleTreeSelect = async (name, nodeData) => {
   listData[name] = await handleTreeLoad(name, nodeData).finally(() => {
     listLoading[name] = false;
   });
+
+  listData[name].forEach((item) => {
+    item.selected = extensions.some((extension) =>
+      item.filename.endsWith(extension)
+    );
+  });
 };
 
 // list
@@ -197,13 +213,13 @@ const handleListClick = async (name, nodeData) => {
         <template #item="{ item, index }">
           <a-list-item
             :key="index"
-            class="cursor-pointer"
+            :class="{ 'cursor-pointer': !item.isFile }"
             @click="handleListClick('origin', item)"
           >
             <template #actions>
               <div class="flex items-center">
                 <template v-if="item.isFile">
-                  <a-checkbox />
+                  <a-checkbox v-model="item.selected" />
                 </template>
               </div>
             </template>
@@ -266,16 +282,9 @@ const handleListClick = async (name, nodeData) => {
         <template #item="{ item, index }">
           <a-list-item
             :key="index"
-            class="cursor-pointer"
+            :class="{ 'cursor-pointer': !item.isFile }"
             @click="handleListClick('target', item)"
           >
-            <template #actions>
-              <div class="flex items-center">
-                <template v-if="item.isFile">
-                  <a-checkbox />
-                </template>
-              </div>
-            </template>
             <div class="flex items-center">
               <div class="flex-shrink-0">
                 <template v-if="item.isFile">
@@ -299,7 +308,7 @@ const handleListClick = async (name, nodeData) => {
 <style lang="less">
 .list {
   .arco-list-item-main {
-    width: 100%;
+    width: calc(100% - 19px);
   }
 }
 </style>
