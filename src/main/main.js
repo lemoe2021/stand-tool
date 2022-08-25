@@ -15,7 +15,7 @@ const createWindow = () => {
   });
 
   win.maximize();
-  win.loadFile('./dist/renderer/index.html');
+  win.loadURL('http://localhost:3000/');
   win.show();
   win.webContents.openDevTools();
 };
@@ -36,18 +36,20 @@ app.on('window-all-closed', () => {
   }
 });
 
-ipcMain.handle('select-directory', async () => {
+ipcMain.handle('choose-directory', async () => {
   const result = await dialog.showOpenDialog(win, {
     properties: ['openDirectory'],
   });
   return {
+    status: 1,
     data: result.canceled ? null : result.filePaths[0],
   };
 });
 
-ipcMain.handle('scan-directory', async (event, pathname) => {
+ipcMain.handle('walk-directory', async (event, pathname) => {
   if (!fs.existsSync(pathname)) {
     return {
+      status: 0,
       message: '路径不存在',
     };
   }
@@ -78,7 +80,9 @@ ipcMain.handle('scan-directory', async (event, pathname) => {
 
   const sort = (list) => {
     list.sort((a, b) =>
-      a.isFile === b.isFile ? a.filename - b.filename : a.isFile - b.isFile
+      a.isFile === b.isFile
+        ? a.filename.localeCompare(b.filename)
+        : a.isFile - b.isFile
     );
     for (const item of list) {
       item.children = sort(item.children);
@@ -88,6 +92,37 @@ ipcMain.handle('scan-directory', async (event, pathname) => {
   data.children = sort(data.children);
 
   return {
+    status: 1,
     data: data.children,
   };
+});
+
+ipcMain.handle('make-directory', async (event, pathname) => {
+  try {
+    await fs.promises.mkdir(pathname);
+
+    return {
+      status: 1,
+    };
+  } catch (e) {
+    return {
+      status: 0,
+      message: '创建失败',
+    };
+  }
+});
+
+ipcMain.handle('remove-directory', async (event, pathname) => {
+  try {
+    await fs.promises.rmdir(pathname, { recursive: true });
+
+    return {
+      status: 1,
+    };
+  } catch (e) {
+    return {
+      status: 0,
+      message: '删除失败',
+    };
+  }
 });

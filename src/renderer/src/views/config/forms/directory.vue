@@ -3,27 +3,31 @@ import { Message } from '@arco-design/web-vue';
 import { reactive } from 'vue';
 
 import { useDirectoryStore } from '@/stores/directory';
+import fs from '@/utils/fs';
 
 const directoryStore = useDirectoryStore();
 
+// form
 const form = reactive({
   origin: directoryStore.origin,
   target: directoryStore.target,
 });
 
+const handleChooseDirectory = async (name) => {
+  const res = await fs.chooseDirectory();
+
+  if (res) {
+    form[name] = res;
+  }
+};
+
 const handleSubmit = (data) => {
   if (data.errors) {
     return;
   }
+
   directoryStore.$patch(data.values);
   Message.success('保存成功');
-};
-
-const handleSelectDirectory = async (name) => {
-  const res = await window.ipcRenderer.invoke('select-directory');
-  if (res.data) {
-    form[name] = res.data;
-  }
 };
 </script>
 
@@ -38,7 +42,7 @@ const handleSelectDirectory = async (name) => {
         v-model="form.origin"
         readonly
         search-button
-        @search="handleSelectDirectory('origin')"
+        @search="handleChooseDirectory('origin')"
       >
         <template #button-icon>
           <icon-folder />
@@ -54,7 +58,7 @@ const handleSelectDirectory = async (name) => {
         v-model="form.target"
         readonly
         search-button
-        @search="handleSelectDirectory('target')"
+        @search="handleChooseDirectory('target')"
       >
         <template #button-icon>
           <icon-folder />

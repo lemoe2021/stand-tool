@@ -2,39 +2,51 @@
 import { Message } from '@arco-design/web-vue';
 import { IconFile, IconFolder } from '@arco-design/web-vue/es/icon';
 
-import { onMounted, reactive, watch } from 'vue';
+import { nextTick, onMounted, reactive, watch } from 'vue';
 
-import { useAppStore } from '@/stores/app';
+import { useMenuStore } from '@/stores/menu';
 import { useDirectoryStore } from '@/stores/directory';
 import { useWhitelistStore } from '@/stores/whitelist';
+import fs from '@/utils/fs';
+import makeDirectoryModel from './models/make-directory.vue';
 
-const appStore = useAppStore();
+const menuStore = useMenuStore();
 const directoryStore = useDirectoryStore();
 const whitelistStore = useWhitelistStore();
 
-if (!directoryStore.origin || !directoryStore.target) {
-  appStore.visible = true;
-}
+// directory
+const directoryCheck = () => {
+  if (!directoryStore.origin || !directoryStore.target) {
+    menuStore.selectedKeys = ['directory'];
+    menuStore.visible = true;
+  }
+};
+directoryCheck();
 
-onMounted(() => {
-  initOrigin();
-  initTarget();
-});
+watch(
+  () => menuStore.visible,
+  (newValue) => {
+    if (newValue === false) {
+      directoryCheck();
+    }
+  }
+);
 
 watch(
   () => directoryStore.origin,
   () => {
-    initOrigin();
+    initTree('origin');
   }
 );
 
 watch(
   () => directoryStore.target,
   () => {
-    initTarget();
+    initTree('target');
   }
 );
 
+// whitelist
 let extensions = whitelistStore.extensions.split('\n');
 watch(
   () => whitelistStore.extensions,
@@ -43,75 +55,45 @@ watch(
   }
 );
 
-const scanDirectory = async (nodeData) => {
-  const res = await window.ipcRenderer.invoke(
-    'scan-directory',
-    nodeData.pathname
-  );
-  if (!('data' in res)) {
-    Message.error(res.message);
-    throw res.message;
-  }
-
-  return res.data;
-};
+onMounted(() => {
+  initTree('origin');
+  initTree('target');
+});
 
 // tree
 const treeRef = reactive({
   origin: null,
   target: null,
 });
-const treeLoading = reactive({
-  origin: false,
-  target: false,
-});
 const treeData = reactive({
   origin: [],
   target: [],
 });
 
-const initOrigin = () => {
-  treeData.origin = [
+const initTree = (name) => {
+  treeData[name] = [
     {
-      pathname: directoryStore.origin,
-      filename: directoryStore.origin,
+      pathname: directoryStore[name],
+      filename: directoryStore[name],
       isFile: false,
       inodeNo: null,
       children: [],
     },
   ];
-  initTree('origin');
-};
-
-const initTarget = () => {
-  treeData.target = [
-    {
-      pathname: directoryStore.target,
-      filename: directoryStore.target,
-      isFile: false,
-      inodeNo: null,
-      children: [],
-    },
-  ];
-  initTree('target');
-};
-
-const initTree = async (name) => {
-  const nodeData = treeData[name][0];
-
-  treeRef[name].expandNode(nodeData.pathname, false);
-  nodeData.children = [];
-
-  treeLoading[name] = true;
-  await handleTreeLoad(name, nodeData).finally(() => {
-    treeLoading[name] = false;
+  nextTick(() => {
+    treeRef[name].selectNode(treeData[name][0].pathname);
   });
-
-  treeRef[name].expandNode(nodeData.pathname);
 };
 
-const handleTreeLoad = async (name, nodeData) => {
-  const data = await scanDirectory(nodeData);
+const handleTreeRefresh = async (name) => {
+  listData[name] = [];
+  treeRef[name].expandAll(false);
+
+  await initTree(name);
+};
+
+const handleNodeLoad = async (name, nodeData) => {
+  const data = await fs.walkDirectory(nodeData);
 
   const format = (list) => {
     list = list.filter((item) => !item.isFile);
@@ -125,24 +107,20 @@ const handleTreeLoad = async (name, nodeData) => {
   if (nodeData.children.length === 0) {
     nodeData.isLeaf = true;
   } else {
-    treeRef[name].expandNode(nodeData.pathname);
+    nodeData.isLeaf = false;
+    nextTick(() => {
+      treeRef[name].expandNode(nodeData.pathname);
+    });
   }
 
   return data;
 };
 
-const handleTreeRefresh = async (name) => {
-  treeRef[name].selectAll(false);
-  listData[name] = [];
-
-  await initTree(name);
-};
-
-const handleTreeSelect = async (name, nodeData) => {
+const handleNodeSelect = async (name, nodeData) => {
   listData[name] = [];
 
   listLoading[name] = true;
-  listData[name] = await handleTreeLoad(name, nodeData).finally(() => {
+  listData[name] = await handleNodeLoad(name, nodeData).finally(() => {
     listLoading[name] = false;
   });
 
@@ -163,10 +141,49 @@ const listData = reactive({
   target: [],
 });
 
-const handleListClick = async (name, nodeData) => {
+const handleListClick = (name, nodeData) => {
   if (!nodeData.isFile) {
     treeRef[name].selectNode(nodeData.pathname);
   }
+};
+
+// make
+const makeDirectoryModelData = reactive({
+  visible: false,
+  attrs: {
+    pathname: '',
+  },
+});
+
+const handleMakeDirectorySuccess = async (pathname) => {
+  const nodeData = treeRef.target.getSelectedNodes()[0];
+  nodeData.isFile = false;
+  listLoading.target = true;
+  listData.target = await handleNodeLoad('target', nodeData).finally(() => {
+    listLoading.target = false;
+  });
+  treeRef.target.selectNode(pathname);
+};
+
+const handleMakeDirectoryClick = () => {
+  makeDirectoryModelData.attrs = {
+    pathname: treeRef.target.getSelectedNodes()[0].pathname,
+  };
+  makeDirectoryModelData.visible = true;
+};
+
+// remove
+const handleRemoveDirectoryClick = async () => {
+  if (treeRef.target.getSelectedNodes()[0].pathname === directoryStore.target) {
+    Message.error('根目录不可删除');
+    return;
+  }
+
+  const pathname = treeRef.target.getSelectedNodes()[0].pathname;
+  await fs.removeDirectory(pathname);
+
+  Message.success('删除成功');
+  treeRef.target.selectNode(pathname.split('/').slice(0, -1).join('/'));
 };
 </script>
 
@@ -176,11 +193,11 @@ const handleListClick = async (name, nodeData) => {
       <template #extra>
         <a-button type="text" @click="handleTreeRefresh('origin')">
           <template #icon>
-            <icon-refresh />
+            <icon-refresh size="20" />
           </template>
         </a-button>
       </template>
-      <a-spin :loading="treeLoading.origin" class="w-full">
+      <a-spin class="w-full">
         <a-tree
           :ref="(el) => (treeRef.origin = el)"
           size="mini"
@@ -189,12 +206,12 @@ const handleListClick = async (name, nodeData) => {
             key: 'pathname',
             title: 'filename',
           }"
-          :load-more="(nodeData) => handleTreeLoad('origin', nodeData)"
+          :load-more="(nodeData) => handleNodeLoad('origin', nodeData)"
           :virtual-list-props="{
             height: 300,
           }"
           @select="
-            (selectedKeys, data) => handleTreeSelect('origin', data.node)
+            (selectedKeys, data) => handleNodeSelect('origin', data.node)
           "
         />
       </a-spin>
@@ -243,13 +260,28 @@ const handleListClick = async (name, nodeData) => {
 
     <a-card>
       <template #extra>
+        <a-button type="text" @click="handleMakeDirectoryClick">
+          <template #icon>
+            <icon-folder-add size="20" />
+          </template>
+        </a-button>
+        <a-popconfirm
+          content="确认删除目录吗？"
+          @ok="handleRemoveDirectoryClick"
+        >
+          <a-button type="text">
+            <template #icon>
+              <icon-folder-delete size="20" />
+            </template>
+          </a-button>
+        </a-popconfirm>
         <a-button type="text" @click="handleTreeRefresh('target')">
           <template #icon>
-            <icon-refresh />
+            <icon-refresh size="20" />
           </template>
         </a-button>
       </template>
-      <a-spin :loading="treeLoading.target" class="w-full">
+      <a-spin class="w-full">
         <a-tree
           :ref="(el) => (treeRef.target = el)"
           size="mini"
@@ -258,12 +290,12 @@ const handleListClick = async (name, nodeData) => {
             key: 'pathname',
             title: 'filename',
           }"
-          :load-more="(nodeData) => handleTreeLoad('target', nodeData)"
+          :load-more="(nodeData) => handleNodeLoad('target', nodeData)"
           :virtual-list-props="{
             height: 300,
           }"
           @select="
-            (selectedKeys, data) => handleTreeSelect('target', data.node)
+            (selectedKeys, data) => handleNodeSelect('target', data.node)
           "
         />
       </a-spin>
@@ -303,6 +335,12 @@ const handleListClick = async (name, nodeData) => {
       </a-list>
     </a-card>
   </div>
+
+  <make-directory-model
+    v-model:visible="makeDirectoryModelData.visible"
+    :="makeDirectoryModelData.attrs"
+    @success="handleMakeDirectorySuccess"
+  />
 </template>
 
 <style lang="less">

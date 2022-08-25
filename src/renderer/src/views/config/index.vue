@@ -1,8 +1,11 @@
 <script setup>
-import { computed, ref } from 'vue';
+import { computed, ref, toRaw } from 'vue';
 
+import { useMenuStore } from '@/stores/menu';
 import DirectoryForm from './forms/directory.vue';
 import WhitelistForm from './forms/whitelist.vue';
+
+const menuStore = useMenuStore();
 
 const props = defineProps({
   visible: {
@@ -21,18 +24,20 @@ const newVisible = computed({
   },
 });
 
-const name = ref('directory');
-
-const component = computed(() => {
-  switch (name.value) {
+// menu
+const handleMenuItemClick = (key) => {
+  switch (key) {
     case 'directory':
-      return DirectoryForm;
+      component.value = DirectoryForm;
+      break;
     case 'whitelist':
-      return WhitelistForm;
-    default:
-      return DirectoryForm;
+      component.value = WhitelistForm;
+      break;
   }
-});
+};
+
+// form
+const component = ref(DirectoryForm);
 </script>
 
 <template>
@@ -47,9 +52,9 @@ const component = computed(() => {
     <a-layout class="h-full">
       <a-layout-sider class="h-full">
         <a-menu
-          :default-selected-keys="['directory']"
+          v-model:selected-keys="menuStore.selectedKeys"
           class="h-full"
-          @menu-item-click="(key) => (name = key)"
+          @menu-item-click="handleMenuItemClick"
         >
           <a-menu-item key="directory">
             <template #icon><icon-folder size="20" /></template>
@@ -63,7 +68,7 @@ const component = computed(() => {
       </a-layout-sider>
       <a-layout-content>
         <div class="p-4">
-          <component :is="component" />
+          <component :is="toRaw(component)" />
         </div>
       </a-layout-content>
     </a-layout>

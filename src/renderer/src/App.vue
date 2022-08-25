@@ -2,18 +2,18 @@
 import zhCN from '@arco-design/web-vue/es/locale/lang/zh-cn';
 import { computed } from 'vue';
 
-import { useAppStore } from '@/stores/app';
+import { useMenuStore } from '@/stores/menu';
 import Config from '@/views/config/index.vue';
 import Home from '@/views/home/index.vue';
 
-const appStore = useAppStore();
+const menuStore = useMenuStore();
 
 const visible = computed({
   get() {
-    return appStore.visible;
+    return menuStore.visible;
   },
   set(value) {
-    appStore.visible = value;
+    menuStore.visible = value;
   },
 });
 </script>

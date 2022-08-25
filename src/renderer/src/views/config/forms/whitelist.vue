@@ -14,6 +14,7 @@ const handleSubmit = (data) => {
   if (data.errors) {
     return;
   }
+
   data.values.extensions = data.values.extensions.trim();
   whitelistStore.$patch(data.values);
   Message.success('保存成功');
