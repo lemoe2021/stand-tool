@@ -126,3 +126,18 @@ ipcMain.handle('remove-directory', async (event, pathname) => {
     };
   }
 });
+
+ipcMain.handle('unlink-file', async (event, pathname) => {
+  try {
+    await fs.promises.unlink(pathname);
+
+    return {
+      status: 1,
+    };
+  } catch (e) {
+    return {
+      status: 0,
+      message: '删除失败',
+    };
+  }
+});

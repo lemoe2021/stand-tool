@@ -39,9 +39,18 @@ const removeDirectory = async (pathname) => {
   }
 };
 
+const unlinkFile = async (pathname) => {
+  const res = await window.ipcRenderer.invoke('unlink-file', pathname);
+  if (res.status === 0) {
+    Message.error(res.message);
+    throw res.message;
+  }
+};
+
 export default {
   chooseDirectory,
   walkDirectory,
   makeDirectory,
   removeDirectory,
+  unlinkFile,
 };

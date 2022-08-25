@@ -94,15 +94,11 @@ const handleTreeRefresh = async (name) => {
 
 const handleNodeLoad = async (name, nodeData) => {
   const data = await fs.walkDirectory(nodeData);
+  data.forEach((item) => {
+    item.parent = nodeData;
+  });
 
-  const format = (list) => {
-    list = list.filter((item) => !item.isFile);
-    for (const item of list) {
-      item.children = format(item.children);
-    }
-    return list;
-  };
-  nodeData.children = format(data);
+  nodeData.children = data.filter((item) => !item.isFile);
 
   if (nodeData.children.length === 0) {
     nodeData.isLeaf = true;
@@ -110,6 +106,16 @@ const handleNodeLoad = async (name, nodeData) => {
     nodeData.isLeaf = false;
     nextTick(() => {
       treeRef[name].expandNode(nodeData.pathname);
+      treeRef[name].getExpandedNodes().forEach((expandedNodeData) => {
+        if (
+          nodeData.children.some(
+            (childNodeData) =>
+              childNodeData.pathname === expandedNodeData.pathname
+          )
+        ) {
+          treeRef[name].expandNode(expandedNodeData.pathname, false);
+        }
+      });
     });
   }
 
@@ -174,16 +180,35 @@ const handleMakeDirectoryClick = () => {
 
 // remove
 const handleRemoveDirectoryClick = async () => {
-  if (treeRef.target.getSelectedNodes()[0].pathname === directoryStore.target) {
+  const nodeData = treeRef.target.getSelectedNodes()[0];
+
+  if (nodeData.pathname === directoryStore.target) {
     Message.error('根目录不可删除');
     return;
   }
 
-  const pathname = treeRef.target.getSelectedNodes()[0].pathname;
-  await fs.removeDirectory(pathname);
+  await fs.removeDirectory(nodeData.pathname);
 
   Message.success('删除成功');
-  treeRef.target.selectNode(pathname.split('/').slice(0, -1).join('/'));
+  listLoading.target = true;
+  listData.target = await handleNodeLoad('target', nodeData.parent).finally(
+    () => {
+      listLoading.target = false;
+    }
+  );
+};
+
+// unlink
+const handleUnlinkFileClick = async (nodeData) => {
+  await fs.unlinkFile(nodeData.pathname);
+
+  Message.success('删除成功');
+  listLoading.target = true;
+  listData.target = await handleNodeLoad('target', nodeData.parent).finally(
+    () => {
+      listLoading.target = false;
+    }
+  );
 };
 </script>
 
@@ -317,6 +342,22 @@ const handleRemoveDirectoryClick = async () => {
             :class="{ 'cursor-pointer': !item.isFile }"
             @click="handleListClick('target', item)"
           >
+            <template #actions>
+              <div class="flex items-center">
+                <template v-if="item.isFile">
+                  <a-popconfirm
+                    content="确认删除文件吗？"
+                    @ok="handleUnlinkFileClick(item)"
+                  >
+                    <a-button type="text">
+                      <template #icon>
+                        <icon-delete size="20" />
+                      </template>
+                    </a-button>
+                  </a-popconfirm>
+                </template>
+              </div>
+            </template>
             <div class="flex items-center">
               <div class="flex-shrink-0">
                 <template v-if="item.isFile">
@@ -346,7 +387,7 @@ const handleRemoveDirectoryClick = async () => {
 <style lang="less">
 .list {
   .arco-list-item-main {
-    width: calc(100% - 19px);
+    width: calc(100% - 100px);
   }
 }
 </style>
