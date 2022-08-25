@@ -9,6 +9,7 @@ import { useDirectoryStore } from '@/stores/directory';
 import { useWhitelistStore } from '@/stores/whitelist';
 import fs from '@/utils/fs';
 import makeDirectoryModel from './models/make-directory.vue';
+import renameFileModel from './models/rename-file.vue';
 
 const menuStore = useMenuStore();
 const directoryStore = useDirectoryStore();
@@ -210,6 +211,31 @@ const handleUnlinkFileClick = async (nodeData) => {
     }
   );
 };
+
+// rename
+const renameFileModelData = reactive({
+  visible: false,
+  attrs: {
+    pathname: '',
+  },
+});
+
+const handleRenameFileSuccess = async () => {
+  listLoading.target = true;
+  listData.target = await handleNodeLoad(
+    'target',
+    treeRef.target.getSelectedNodes()[0]
+  ).finally(() => {
+    listLoading.target = false;
+  });
+};
+
+const handleRenameFileClick = (nodeData) => {
+  renameFileModelData.attrs = {
+    pathname: nodeData.pathname,
+  };
+  renameFileModelData.visible = true;
+};
 </script>
 
 <template>
@@ -253,11 +279,7 @@ const handleUnlinkFileClick = async (nodeData) => {
       >
         <template #empty />
         <template #item="{ item, index }">
-          <a-list-item
-            :key="index"
-            :class="{ 'cursor-pointer': !item.isFile }"
-            @click="handleListClick('origin', item)"
-          >
+          <a-list-item :key="index">
             <template #actions>
               <div class="flex items-center">
                 <template v-if="item.isFile">
@@ -265,7 +287,11 @@ const handleUnlinkFileClick = async (nodeData) => {
                 </template>
               </div>
             </template>
-            <div class="flex items-center">
+            <div
+              class="flex items-center"
+              :class="{ 'cursor-pointer': !item.isFile }"
+              @click="handleListClick('origin', item)"
+            >
               <div class="flex-shrink-0">
                 <template v-if="item.isFile">
                   <icon-file v-if="item.isFile" size="20" class="mr-2" />
@@ -337,13 +363,14 @@ const handleUnlinkFileClick = async (nodeData) => {
       >
         <template #empty />
         <template #item="{ item, index }">
-          <a-list-item
-            :key="index"
-            :class="{ 'cursor-pointer': !item.isFile }"
-            @click="handleListClick('target', item)"
-          >
+          <a-list-item :key="index">
             <template #actions>
               <div class="flex items-center">
+                <a-button type="text" @click="handleRenameFileClick(item)">
+                  <template #icon>
+                    <icon-edit size="20" />
+                  </template>
+                </a-button>
                 <template v-if="item.isFile">
                   <a-popconfirm
                     content="确认删除文件吗？"
@@ -358,7 +385,11 @@ const handleUnlinkFileClick = async (nodeData) => {
                 </template>
               </div>
             </template>
-            <div class="flex items-center">
+            <div
+              class="flex items-center"
+              :class="{ 'cursor-pointer': !item.isFile }"
+              @click="handleListClick('target', item)"
+            >
               <div class="flex-shrink-0">
                 <template v-if="item.isFile">
                   <icon-file v-if="item.isFile" size="20" class="mr-2" />
@@ -381,6 +412,12 @@ const handleUnlinkFileClick = async (nodeData) => {
     v-model:visible="makeDirectoryModelData.visible"
     :="makeDirectoryModelData.attrs"
     @success="handleMakeDirectorySuccess"
+  />
+
+  <rename-file-model
+    v-model:visible="renameFileModelData.visible"
+    :="renameFileModelData.attrs"
+    @success="handleRenameFileSuccess"
   />
 </template>
 

@@ -141,3 +141,18 @@ ipcMain.handle('unlink-file', async (event, pathname) => {
     };
   }
 });
+
+ipcMain.handle('rename-file', async (event, oldPathname, newPathname) => {
+  try {
+    await fs.promises.rename(oldPathname, newPathname);
+
+    return {
+      status: 1,
+    };
+  } catch (e) {
+    return {
+      status: 0,
+      message: '修改失败',
+    };
+  }
+});

@@ -47,10 +47,23 @@ const unlinkFile = async (pathname) => {
   }
 };
 
+const renameFile = async (oldPathname, newPathname) => {
+  const res = await window.ipcRenderer.invoke(
+    'rename-file',
+    oldPathname,
+    newPathname
+  );
+  if (res.status === 0) {
+    Message.error(res.message);
+    throw res.message;
+  }
+};
+
 export default {
   chooseDirectory,
   walkDirectory,
   makeDirectory,
   removeDirectory,
   unlinkFile,
+  renameFile,
 };
