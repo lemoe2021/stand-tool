@@ -1,6 +1,11 @@
 {
   "name": "stand-tool",
+  "description": "Hard link tool.",
   "version": "1.0.0",
+  "homepage": "https://github.com/lemoe-technology/stand-tool",
+  "author": "Lemoe",
+  "repository": "github:lemoe-technology/stand-tool",
+  "license": "MIT",
   "main": "src/main/main.js",
   "scripts": {
     "dev": "vite",
