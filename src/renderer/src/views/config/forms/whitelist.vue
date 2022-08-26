@@ -15,7 +15,11 @@ const handleSubmit = (data) => {
     return;
   }
 
-  data.values.extensions = data.values.extensions.trim();
+  data.values.extensions = data.values.extensions
+    .trim()
+    .split('\n')
+    .map((item) => item.trim())
+    .join('\n');
   whitelistStore.$patch(data.values);
   Message.success('保存成功');
 };

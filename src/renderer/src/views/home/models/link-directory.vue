@@ -31,7 +31,7 @@ const newVisible = computed({
 
 const handleBeforeOpen = () => {
   const found1 = props.targetNodeData.pathname.match(
-    /^(\/.+)+\/(?<showName>.+)\/Season \d+$/i
+    /^([/\\].+)+[/\\](?<showName>.+)[/\\]Season \d+$/i
   );
   const showName = found1 ? found1.groups.showName : '';
   const found2 = props.targetNodeData.filename.match(

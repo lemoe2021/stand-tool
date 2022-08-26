@@ -193,12 +193,7 @@ const handleRemoveDirectoryClick = async () => {
   await fs.removeDirectory(nodeData.pathname);
 
   Message.success('删除成功');
-  listLoading.target = true;
-  listData.target = await handleNodeLoad('target', nodeData.parent).finally(
-    () => {
-      listLoading.target = false;
-    }
-  );
+  treeRef.target.selectNode(nodeData.parent.pathname);
 };
 
 // unlink

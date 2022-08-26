@@ -39,7 +39,7 @@ const handleSubmit = async (data) => {
     return;
   }
 
-  const pathname = `${props.pathname}/${data.values.filename}`;
+  const pathname = `${props.pathname}/${data.values.filename.trim()}`;
   await fs.makeDirectory(pathname);
 
   Message.success('创建成功');
