@@ -15,9 +15,8 @@ const createWindow = () => {
   });
 
   win.maximize();
-  win.loadURL('http://localhost:3000/');
+  win.loadFile('./dist/renderer/index.html');
   win.show();
-  win.webContents.openDevTools();
 };
 
 app.whenReady().then(() => {
