@@ -2,7 +2,7 @@
 import { Message } from '@arco-design/web-vue';
 import { IconFile, IconFolder } from '@arco-design/web-vue/es/icon';
 
-import { nextTick, onMounted, reactive, watch } from 'vue';
+import { nextTick, onMounted, reactive, ref, watch } from 'vue';
 
 import { useMenuStore } from '@/stores/menu';
 import { useDirectoryStore } from '@/stores/directory';
@@ -148,6 +148,7 @@ const listData = reactive({
   origin: [],
   target: [],
 });
+const inodeNo = ref('');
 
 const handleListClick = (name, nodeData) => {
   if (!nodeData.isFile) {
@@ -276,7 +277,7 @@ const handleLinkDirectoryClick = () => {
   <div class="grid grid-cols-2 gap-4">
     <a-card>
       <template #extra>
-        <a-button type="text" @click="handleTreeRefresh('origin')">
+        <a-button type="text" size="mini" @click="handleTreeRefresh('origin')">
           <template #icon>
             <icon-refresh size="20" />
           </template>
@@ -317,8 +318,20 @@ const handleLinkDirectoryClick = () => {
             <template #actions>
               <div class="flex items-center">
                 <template v-if="item.isFile">
-                  <a-checkbox v-model="item.selected" />
+                  <a-checkbox v-model="item.selected" class="mr-2" />
                 </template>
+                <icon-link
+                  size="20"
+                  :style="{
+                    color: listData.target
+                      .map((item) => item.inodeNo)
+                      .includes(item.inodeNo)
+                      ? 'rgb(var(--primary-6))'
+                      : 'var(--color-text-1)',
+                  }"
+                  @mouseover="inodeNo = item.inodeNo"
+                  @mouseleave="inodeNo = ''"
+                />
               </div>
             </template>
             <div
@@ -345,7 +358,7 @@ const handleLinkDirectoryClick = () => {
 
     <a-card>
       <template #extra>
-        <a-button type="text" @click="handleMakeDirectoryClick">
+        <a-button type="text" size="mini" @click="handleMakeDirectoryClick">
           <template #icon>
             <icon-folder-add size="20" />
           </template>
@@ -354,13 +367,13 @@ const handleLinkDirectoryClick = () => {
           content="确认删除目录吗？"
           @ok="handleRemoveDirectoryClick"
         >
-          <a-button type="text">
+          <a-button type="text" size="mini">
             <template #icon>
               <icon-folder-delete size="20" />
             </template>
           </a-button>
         </a-popconfirm>
-        <a-button type="text" @click="handleTreeRefresh('target')">
+        <a-button type="text" size="mini" @click="handleTreeRefresh('target')">
           <template #icon>
             <icon-refresh size="20" />
           </template>
@@ -397,10 +410,20 @@ const handleLinkDirectoryClick = () => {
       >
         <template #empty />
         <template #item="{ item, index }">
-          <a-list-item :key="index">
+          <a-list-item
+            :key="index"
+            :style="{
+              background:
+                inodeNo === item.inodeNo ? 'rgb(var(--primary-6))' : 'none',
+            }"
+          >
             <template #actions>
               <div class="flex items-center">
-                <a-button type="text" @click="handleRenameFileClick(item)">
+                <a-button
+                  type="text"
+                  size="mini"
+                  @click="handleRenameFileClick(item)"
+                >
                   <template #icon>
                     <icon-edit size="20" />
                   </template>
@@ -410,7 +433,7 @@ const handleLinkDirectoryClick = () => {
                     content="确认删除文件吗？"
                     @ok="handleUnlinkFileClick(item)"
                   >
-                    <a-button type="text">
+                    <a-button type="text" size="mini">
                       <template #icon>
                         <icon-delete size="20" />
                       </template>
@@ -473,7 +496,13 @@ const handleLinkDirectoryClick = () => {
 <style lang="less">
 .list {
   .arco-list-item-main {
+    display: flex;
+    align-items: center;
     width: calc(100% - 100px);
+
+    .arco-list-item-content {
+      width: 100%;
+    }
   }
 }
 </style>
