@@ -74,7 +74,7 @@ const handleSubmit = async (data) => {
         <template #extra>
           <a-space wrap>
             <a-button
-              v-for="i in 6"
+              v-for="(_, i) in 6"
               :key="i"
               size="mini"
               @click="

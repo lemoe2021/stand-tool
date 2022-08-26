@@ -8,6 +8,7 @@ import { useMenuStore } from '@/stores/menu';
 import { useDirectoryStore } from '@/stores/directory';
 import { useWhitelistStore } from '@/stores/whitelist';
 import fs from '@/utils/fs';
+import linkDirectoryModel from './models/link-directory.vue';
 import makeDirectoryModel from './models/make-directory.vue';
 import renameFileModel from './models/rename-file.vue';
 
@@ -236,6 +237,39 @@ const handleRenameFileClick = (nodeData) => {
   };
   renameFileModelData.visible = true;
 };
+
+// link
+const linkDirectoryModelData = reactive({
+  visible: false,
+  attrs: {
+    originNodeDatas: [],
+    targetNodeData: {},
+  },
+});
+
+const handleLinkDirectorySuccess = async () => {
+  listLoading.target = true;
+  listData.target = await handleNodeLoad(
+    'target',
+    treeRef.target.getSelectedNodes()[0]
+  ).finally(() => {
+    listLoading.target = false;
+  });
+};
+
+const handleLinkDirectoryClick = () => {
+  const originNodeDatas = listData.origin.filter((item) => item.selected);
+  if (originNodeDatas.length === 0) {
+    Message.error('请选择文件');
+    return;
+  }
+
+  linkDirectoryModelData.attrs = {
+    originNodeDatas,
+    targetNodeData: treeRef.target.getSelectedNodes()[0],
+  };
+  linkDirectoryModelData.visible = true;
+};
 </script>
 
 <template>
@@ -408,6 +442,15 @@ const handleRenameFileClick = (nodeData) => {
     </a-card>
   </div>
 
+  <div class="flex justify-center mt-4">
+    <a-button type="primary" @click="handleLinkDirectoryClick">
+      <template #icon>
+        <icon-double-right />
+      </template>
+      <template #default>创建硬链接</template>
+    </a-button>
+  </div>
+
   <make-directory-model
     v-model:visible="makeDirectoryModelData.visible"
     :="makeDirectoryModelData.attrs"
@@ -418,6 +461,12 @@ const handleRenameFileClick = (nodeData) => {
     v-model:visible="renameFileModelData.visible"
     :="renameFileModelData.attrs"
     @success="handleRenameFileSuccess"
+  />
+
+  <link-directory-model
+    v-model:visible="linkDirectoryModelData.visible"
+    :="linkDirectoryModelData.attrs"
+    @success="handleLinkDirectorySuccess"
   />
 </template>
 
