@@ -7,7 +7,8 @@
     "build": "vite build",
     "preview": "vite preview --port 4173",
     "lint": "eslint . --ext .vue,.js,.jsx,.cjs,.mjs --fix --ignore-path .gitignore",
-    "electron:start": "electron ."
+    "electron:start": "electron .",
+    "electron:pack": "electron-builder"
   },
   "dependencies": {
     "@arco-design/web-vue": "^2.35.1",
@@ -19,6 +20,7 @@
   "devDependencies": {
     "@vitejs/plugin-vue": "^2.0.1",
     "electron": "^20.0.3",
+    "electron-builder": "^23.3.3",
     "eslint": "^8.7.0",
     "eslint-config-prettier": "^8.3.0",
     "eslint-plugin-prettier": "^4.0.0",
