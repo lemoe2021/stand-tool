@@ -14,6 +14,7 @@ const createWindow = () => {
     },
   });
 
+  win.removeMenu();
   win.maximize();
   win.loadFile('./dist/renderer/index.html');
   win.show();

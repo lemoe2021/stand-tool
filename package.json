@@ -7,8 +7,16 @@
     "build": "vite build",
     "preview": "vite preview --port 4173",
     "lint": "eslint . --ext .vue,.js,.jsx,.cjs,.mjs --fix --ignore-path .gitignore",
-    "electron:start": "electron .",
-    "electron:pack": "electron-builder"
+    "electron:dev": "electron .",
+    "electron:build": "electron-builder --win"
+  },
+  "build": {
+    "directories": {
+      "output": "./dist/main"
+    },
+    "win": {
+      "target": ["portable"]
+    }
   },
   "dependencies": {
     "@arco-design/web-vue": "^2.35.1",
