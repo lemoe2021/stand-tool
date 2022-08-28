@@ -59,7 +59,7 @@ const constructName = () => {
   form.value.files = props.originNodeDatas.map((item) => {
     let filename = '';
     const found = item.filename.match(
-      /^.*?[e[](?<episodeNo>\d+).*\.(?<extension>\w+)$/i
+      /^.*(s\d+)?[e[第](?<episodeNo>\d+).*\.(?<extension>\w+)$/i
     );
     if (found) {
       const episodeNo = found.groups.episodeNo.toString().padStart(2, '0');
