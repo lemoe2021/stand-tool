@@ -171,7 +171,9 @@ const handleMakeDirectorySuccess = async (pathname) => {
   listData.target = await handleNodeLoad('target', nodeData).finally(() => {
     listLoading.target = false;
   });
-  treeRef.target.selectNode(pathname);
+  nextTick(() => {
+    treeRef.target.selectNode(pathname);
+  });
 };
 
 const handleMakeDirectoryClick = () => {
