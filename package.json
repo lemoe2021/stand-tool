@@ -1,7 +1,7 @@
 {
   "name": "stand-tool",
   "description": "Hard link tool.",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "homepage": "https://github.com/lemoe-technology/stand-tool",
   "author": "Lemoe",
   "repository": "github:lemoe-technology/stand-tool",
@@ -20,7 +20,9 @@
       "output": "./dist/main"
     },
     "win": {
-      "target": ["portable"]
+      "target": [
+        "portable"
+      ]
     }
   },
   "dependencies": {
