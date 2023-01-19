@@ -5,6 +5,7 @@ import { IconFile, IconFolder } from '@arco-design/web-vue/es/icon';
 import { nextTick, onMounted, reactive, ref, watch } from 'vue';
 
 import { useMenuStore } from '@/stores/menu';
+import { useBlacklistStore } from '@/stores/blacklist';
 import { useDirectoryStore } from '@/stores/directory';
 import { useWhitelistStore } from '@/stores/whitelist';
 import fs from '@/utils/fs';
@@ -13,6 +14,7 @@ import makeDirectoryModel from './models/make-directory.vue';
 import renameFileModel from './models/rename-file.vue';
 
 const menuStore = useMenuStore();
+const blacklistStore = useBlacklistStore();
 const directoryStore = useDirectoryStore();
 const whitelistStore = useWhitelistStore();
 
@@ -45,6 +47,15 @@ watch(
   () => directoryStore.target,
   () => {
     initTree('target');
+  }
+);
+
+// blacklist
+let expressions = blacklistStore.expressions.split('\n');
+watch(
+  () => blacklistStore.expressions,
+  () => {
+    expressions = blacklistStore.expressions.split('\n');
   }
 );
 
@@ -133,9 +144,11 @@ const handleNodeSelect = async (name, nodeData) => {
   });
 
   listData[name].forEach((item) => {
-    item.selected = extensions.some((extension) =>
-      item.filename.endsWith(extension)
-    );
+    item.selected =
+      extensions.some((extension) => item.filename.endsWith(extension)) &&
+      expressions.every(
+        (expression) => !new RegExp(expression, 'i').test(item.filename)
+      );
   });
 };
 

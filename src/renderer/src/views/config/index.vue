@@ -2,6 +2,7 @@
 import { computed, ref, toRaw } from 'vue';
 
 import { useMenuStore } from '@/stores/menu';
+import BlacklistForm from './forms/blacklist.vue';
 import DirectoryForm from './forms/directory.vue';
 import WhitelistForm from './forms/whitelist.vue';
 
@@ -33,6 +34,9 @@ const handleMenuItemClick = (key) => {
     case 'whitelist':
       component.value = WhitelistForm;
       break;
+    case 'blacklist':
+      component.value = BlacklistForm;
+      break;
   }
 };
 
@@ -62,7 +66,11 @@ const component = ref(DirectoryForm);
           </a-menu-item>
           <a-menu-item key="whitelist">
             <template #icon><icon-robot size="20" /></template>
-            白名单
+            扩展名白名单
+          </a-menu-item>
+          <a-menu-item key="blacklist">
+            <template #icon><icon-robot size="20" /></template>
+            正则表达式黑名单
           </a-menu-item>
         </a-menu>
       </a-layout-sider>
