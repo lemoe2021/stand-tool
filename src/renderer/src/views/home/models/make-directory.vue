@@ -34,6 +34,10 @@ const handleBeforeOpen = () => {
 // form
 const form = ref({});
 
+const handleFormat = () => {
+  form.value.filename = form.value.filename.replaceAll(/\s+/g, '.');
+};
+
 const handleSubmit = async (data) => {
   if (data.errors) {
     return;
@@ -68,6 +72,11 @@ const handleSubmit = async (data) => {
           <template #prepend>
             <span :title="`${pathname}/`" class="truncate max-w-300px">
               {{ pathname }}/
+            </span>
+          </template>
+          <template #append>
+            <span class="arco-icon-hover" @click="handleFormat">
+              <icon-translate />
             </span>
           </template>
         </a-input>

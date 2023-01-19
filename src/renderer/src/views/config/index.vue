@@ -65,11 +65,11 @@ const component = ref(DirectoryForm);
             路径
           </a-menu-item>
           <a-menu-item key="whitelist">
-            <template #icon><icon-robot size="20" /></template>
+            <template #icon><icon-tag size="20" /></template>
             扩展名白名单
           </a-menu-item>
           <a-menu-item key="blacklist">
-            <template #icon><icon-robot size="20" /></template>
+            <template #icon><icon-tag size="20" /></template>
             正则表达式黑名单
           </a-menu-item>
         </a-menu>
