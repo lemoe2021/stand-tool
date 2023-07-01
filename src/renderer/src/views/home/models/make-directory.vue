@@ -35,7 +35,9 @@ const handleBeforeOpen = () => {
 const form = ref({});
 
 const handleFormat = () => {
-  form.value.filename = form.value.filename.replaceAll(/\s+/g, '.');
+  form.value.filename = form.value.filename
+    .replace(/[!?,-]/g, '')
+    .replaceAll(/\s+/g, '.');
 };
 
 const handleSubmit = async (data) => {
@@ -83,7 +85,7 @@ const handleSubmit = async (data) => {
         <template #extra>
           <a-space wrap>
             <a-button
-              v-for="i in 12"
+              v-for="i in 6"
               :key="i"
               size="mini"
               @click="
@@ -92,6 +94,9 @@ const handleSubmit = async (data) => {
               "
             >
               Season {{ i.toString().padStart(2, '0') }}
+            </a-button>
+            <a-button size="mini" @click="() => (form.filename = 'Season 00')">
+              Season 00
             </a-button>
           </a-space>
         </template>
