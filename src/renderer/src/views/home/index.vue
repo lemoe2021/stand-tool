@@ -2,7 +2,7 @@
 import { Message } from '@arco-design/web-vue';
 import { IconFile, IconFolder } from '@arco-design/web-vue/es/icon';
 
-import { nextTick, onMounted, reactive, ref, watch } from 'vue';
+import { computed, nextTick, onMounted, reactive, ref, watch } from 'vue';
 
 import { useMenuStore } from '@/stores/menu';
 import { useBlacklistStore } from '@/stores/blacklist';
@@ -78,9 +78,40 @@ const treeRef = reactive({
   origin: null,
   target: null,
 });
+const treeSearchKey = reactive({
+  origin: '',
+  target: '',
+});
 const treeData = reactive({
   origin: [],
   target: [],
+});
+
+const treeDataOrigin = computed(() => {
+  if (treeSearchKey.origin === '') {
+    return treeData.origin;
+  }
+  return [
+    {
+      ...treeData.origin[0],
+      children: treeData.origin[0].children.filter((item) =>
+        item.filename.toLowerCase().includes(treeSearchKey.origin)
+      ),
+    },
+  ];
+});
+const treeDataTarget = computed(() => {
+  if (treeSearchKey.target === '') {
+    return treeData.target;
+  }
+  return [
+    {
+      ...treeData.target[0],
+      children: treeData.target[0].children.filter((item) =>
+        item.filename.toLowerCase().includes(treeSearchKey.target)
+      ),
+    },
+  ];
 });
 
 const initTree = (name) => {
@@ -287,30 +318,35 @@ const handleLinkDirectoryClick = () => {
   <div class="grid grid-cols-2 gap-4">
     <a-card>
       <template #extra>
-        <a-button type="text" size="mini" @click="handleTreeRefresh('origin')">
+        <a-button type="text" size="small" @click="handleTreeRefresh('origin')">
           <template #icon>
             <icon-refresh size="20" />
           </template>
         </a-button>
       </template>
-      <a-spin class="w-full">
-        <a-tree
-          :ref="(el) => (treeRef.origin = el)"
-          size="mini"
-          :data="treeData.origin"
-          :field-names="{
-            key: 'pathname',
-            title: 'filename',
-          }"
-          :load-more="(nodeData) => handleNodeLoad('origin', nodeData)"
-          :virtual-list-props="{
-            height: 300,
-          }"
-          @select="
-            (selectedKeys, data) => handleNodeSelect('origin', data.node)
-          "
-        />
-      </a-spin>
+
+      <a-input
+        v-model="treeSearchKey.origin"
+        size="small"
+        allow-clear
+        placeholder="搜索"
+      />
+      <a-tree
+        :ref="(el) => (treeRef.origin = el)"
+        size="small"
+        :data="treeDataOrigin"
+        :field-names="{
+          key: 'pathname',
+          title: 'filename',
+        }"
+        :load-more="(nodeData) => handleNodeLoad('origin', nodeData)"
+        :virtual-list-props="{
+          height: 300,
+        }"
+        @select="(selectedKeys, data) => handleNodeSelect('origin', data.node)"
+      />
+
+      <a-divider />
 
       <a-list
         :data="listData.origin"
@@ -368,7 +404,7 @@ const handleLinkDirectoryClick = () => {
 
     <a-card>
       <template #extra>
-        <a-button type="text" size="mini" @click="handleMakeDirectoryClick">
+        <a-button type="text" size="small" @click="handleMakeDirectoryClick">
           <template #icon>
             <icon-folder-add size="20" />
           </template>
@@ -377,36 +413,41 @@ const handleLinkDirectoryClick = () => {
           content="确认删除目录吗？"
           @ok="handleRemoveDirectoryClick"
         >
-          <a-button type="text" size="mini">
+          <a-button type="text" size="small">
             <template #icon>
               <icon-folder-delete size="20" />
             </template>
           </a-button>
         </a-popconfirm>
-        <a-button type="text" size="mini" @click="handleTreeRefresh('target')">
+        <a-button type="text" size="small" @click="handleTreeRefresh('target')">
           <template #icon>
             <icon-refresh size="20" />
           </template>
         </a-button>
       </template>
-      <a-spin class="w-full">
-        <a-tree
-          :ref="(el) => (treeRef.target = el)"
-          size="mini"
-          :data="treeData.target"
-          :field-names="{
-            key: 'pathname',
-            title: 'filename',
-          }"
-          :load-more="(nodeData) => handleNodeLoad('target', nodeData)"
-          :virtual-list-props="{
-            height: 300,
-          }"
-          @select="
-            (selectedKeys, data) => handleNodeSelect('target', data.node)
-          "
-        />
-      </a-spin>
+
+      <a-input
+        v-model="treeSearchKey.target"
+        size="small"
+        allow-clear
+        placeholder="搜索"
+      />
+      <a-tree
+        :ref="(el) => (treeRef.target = el)"
+        size="small"
+        :data="treeDataTarget"
+        :field-names="{
+          key: 'pathname',
+          title: 'filename',
+        }"
+        :load-more="(nodeData) => handleNodeLoad('target', nodeData)"
+        :virtual-list-props="{
+          height: 300,
+        }"
+        @select="(selectedKeys, data) => handleNodeSelect('target', data.node)"
+      />
+
+      <a-divider />
 
       <a-list
         :data="listData.target"
@@ -431,7 +472,7 @@ const handleLinkDirectoryClick = () => {
               <div class="flex items-center">
                 <a-button
                   type="text"
-                  size="mini"
+                  size="small"
                   @click="handleRenameFileClick(item)"
                 >
                   <template #icon>
@@ -443,7 +484,7 @@ const handleLinkDirectoryClick = () => {
                     content="确认删除文件吗？"
                     @ok="handleUnlinkFileClick(item)"
                   >
-                    <a-button type="text" size="mini">
+                    <a-button type="text" size="small">
                       <template #icon>
                         <icon-delete size="20" />
                       </template>
