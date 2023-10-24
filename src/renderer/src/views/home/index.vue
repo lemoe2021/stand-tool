@@ -132,6 +132,7 @@ const initTree = (name) => {
 const handleTreeRefresh = async (name) => {
   listData[name] = [];
   treeRef[name].expandAll(false);
+  treeSearchKey[name] = '';
 
   await initTree(name);
 };
