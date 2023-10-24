@@ -51,20 +51,20 @@ watch(
 );
 
 // blacklist
-let expressions = blacklistStore.expressions.split('\n');
+let expressions = blacklistStore.expressions.split('\n').filter(Boolean);
 watch(
   () => blacklistStore.expressions,
   () => {
-    expressions = blacklistStore.expressions.split('\n');
+    expressions = blacklistStore.expressions.split('\n').filter(Boolean);
   }
 );
 
 // whitelist
-let extensions = whitelistStore.extensions.split('\n');
+let extensions = whitelistStore.extensions.split('\n').filter(Boolean);
 watch(
   () => whitelistStore.extensions,
   () => {
-    extensions = whitelistStore.extensions.split('\n');
+    extensions = whitelistStore.extensions.split('\n').filter(Boolean);
   }
 );
 

@@ -30,7 +30,7 @@ const handleSubmit = (data) => {
     <a-form-item field="expressions" label="正则表达式">
       <a-textarea
         v-model="form.expressions"
-        placeholder="正则表达式"
+        placeholder="tc.srt&#10;tc.ass"
         :auto-size="{
           minRows: 5,
         }"
